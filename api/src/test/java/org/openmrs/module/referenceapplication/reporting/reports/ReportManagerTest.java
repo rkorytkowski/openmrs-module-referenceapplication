@@ -16,10 +16,13 @@ package org.openmrs.module.referenceapplication.reporting.reports;
 
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matcher;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.module.reporting.ReportingConstants;
+import org.openmrs.module.reporting.dataset.DataSetRow;
 import org.openmrs.module.reporting.dataset.DataSetUtil;
 import org.openmrs.module.reporting.evaluation.EvaluationContext;
 import org.openmrs.module.reporting.evaluation.parameter.Mapped;
@@ -40,6 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.FileOutputStream;
+
+import static org.hamcrest.Matchers.is;
 
 /**
  * Abstract test for running a particular report test
@@ -85,6 +90,9 @@ public abstract class ReportManagerTest extends BaseModuleContextSensitiveTest {
 		ReportData data = reportDefinitionService.evaluate(rd, context);
 		stopWatch.stop();
 		System.out.println("Report completed: " + stopWatch.toString());
+
+		verifyData(data);
+
 		Assert.assertTrue(data.getDataSets().size() > 0);
 		for (RenderingMode renderingMode : reportService.getRenderingModes(rd)) {
 			ReportRenderer renderer = renderingMode.getRenderer();
@@ -104,6 +112,18 @@ public abstract class ReportManagerTest extends BaseModuleContextSensitiveTest {
 				DataSetUtil.printDataSet(data.getDataSets().get(dsName), System.out);
 			}
 		}
+	}
+
+	public void verifyData(ReportData data) {
+	}
+
+	public Matcher<DataSetRow> hasData(final String column, final String openmrsId) {
+		return new FeatureMatcher<DataSetRow, String>(is(openmrsId), column, column) {
+			@Override
+			protected String featureValueOf(DataSetRow actual) {
+				return (String) actual.getColumnValue(column);
+			}
+		};
 	}
 
 
